@@ -1,0 +1,101 @@
+- hosts: localhost
+#  strategy: debug
+  vars:
+   host:  "172.16.106.131"
+   username: "admin"
+   password: "admin"
+   vdom: "root"
+  tasks:
+# If you manage python pip externaly you don't need that version is
+# here to ensure update/downgrade if needed (optional)
+  - name: Set static route on the fortigate
+    fortiosconfig:
+     action: "set"
+     host:  "{{  host }}"  
+     username: "{{  username}}"  
+     password: "{{ password }}"  
+     vdom:  "{{  vdom }}"  
+     config: "router static"
+     https: False
+     ssl_verify: False
+     config_parameters:
+       seq-num: "8"
+       dst: "10.10.32.0 255.255.255.0"
+       device: "port5"
+       gateway: "192.168.10.10"
+  - name: add multiple firewall address 
+    fortiosconfig:
+     config: "firewall address"
+     action: "set"
+     host:  "{{ host }}"  
+     username: "{{ username }}"  
+     password: "{{ password }}"  
+     vdom:  "{{  vdom }}"
+     https: False
+     ssl_verify: False
+     config_parameters:
+       wildcard-fqdn: "*.{{ item }}"
+       name: "all.{{ item }}"
+       type: "wildcard-fqdn"
+    with_items:
+       - "fortinet.com"
+       - "acme.org"
+  - name:   firewall policy
+    fortiosconfig:
+     config: "firewall policy"
+     action: "set"
+     host:  "{{ host }}"  
+     username: "{{ username }}"  
+     password: "{{ password }}"  
+     vdom:  "{{  vdom }}"
+     https: False
+     ssl_verify: False
+     config_parameters:
+        policyid: "2"
+        name: "ansible"
+        json:
+          policyid: "2"
+          name: "Created By Ansible"
+          action: "accept"
+          srcintf: [ {"name": "port2"} ] 
+          dstintf: [{"name":"port5"} ]
+          srcaddr: [{"name":"all"} ] 
+          dstaddr: [{"name":"all"}] 
+          schedule: "always" 
+          service:  [{"name":"HTTP"}]
+          logtraffic: "all"  
+#   - name: fortimanager management settings
+#     fortiosconfig:
+#      config: "system central-management"
+#      action: "put"
+#      host:  "{{ host }}"  
+#      username: "{{ username }}"  
+#      password: "{{ password }}"
+#      vdom: "global"
+#      https: False
+#      ssl_verify: False
+#      config_parameters:
+#         "type": "fortimanager"
+#         fmg: "10.210.67.18"
+  - name: system resource
+    fortiosconfig:
+     config: "system vdom-resource select"
+     action: "get"
+     host:  "{{ host }}"
+     username: "{{ username }}"  
+     password: "{{ password }}"
+     vdom: "global"
+     https: False
+     ssl_verify: False
+  - name: Get information
+    fortiosconfig:
+     config: "system global"
+     action: "get"
+     host:  "{{ host }}"  
+     username: "{{ username }}"  
+     password: "{{ password }}"
+     vdom: "global"
+     https: False
+     ssl_verify: False
+     config_parameters:
+       name: "global"
