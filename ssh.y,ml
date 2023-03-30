@@ -1,0 +1,20 @@
+- hosts: localhost
+#  strategy: debug
+  vars:
+   host: "172.16.106.131"
+   username: "admin"
+   password: "admin"
+   vdom: "root"
+  tasks:
+  - name: pass cli cmd ssh
+    fortiosconfig:
+     action: "ssh"
+     host:  "{{  host }}"  
+     username: "{{  username}}"  
+     password: "{{ password }}"
+     https: False
+     ssl_verify: False
+     commands: |
+               execute update-now
+               get system status
+               
